@@ -2,9 +2,34 @@
  * ESLint rule to require data-testid on interactive elements
  * This rule helps ensure all interactive elements have test IDs for testing
  * 
+ * @fileoverview ESLint plugin for enforcing data-testid attributes
  * @author Yash Chavan (Hunt092)
+ * @version 1.0.0
  */
 
+import { 
+  generateTestId, 
+  inferCustomComponentIdFromAttributes,
+} from '../utils/testIdUtils.js';
+
+/**
+ * @typedef {Object} TestIdRuleOptions
+ * @property {string[]} [elements] - List of native HTML elements that require data-testid
+ * @property {string[]} [customComponents] - List of custom components that require dataTestId prop
+ * @property {string[]} [exclude] - List of file patterns to exclude
+ * @property {string} [pattern] - Test ID naming pattern (default: '{page}-{purpose}-{element}')
+ */
+
+/**
+ * @typedef {Object} TestIdRuleMessages
+ * @property {string} missingTestId - Error message for missing test ID
+ * @property {string} suggestTestId - Suggestion message for test ID
+ */
+
+/**
+ * ESLint rule configuration object
+ * @type {import('eslint').Rule.RuleModule}
+ */
 export default {
   meta: {
     type: 'suggestion',
@@ -47,13 +72,23 @@ export default {
     }
   },
 
+  /**
+   * Creates the rule implementation
+   * @param {import('eslint').Rule.RuleContext} context - ESLint rule context
+   * @returns {import('eslint').Rule.RuleListener} Rule listener object
+   */
   create(context) {
+    /** @type {TestIdRuleOptions} */
     const options = context.options[0] || {};
+    /** @type {string[]} */
     const elements = options.elements || [
       'button', 'input', 'select', 'textarea', 'a', 'form', 'div'
     ];
+    /** @type {string[]} */
     const customComponents = options.customComponents || [];
+    /** @type {string[]} */
     const exclude = options.exclude || [];
+    /** @type {string} */
     const pattern = options.pattern || '{page}-{purpose}-{element}';
 
     // Check if current file should be excluded
@@ -78,7 +113,7 @@ export default {
           );
 
           if (!hasDataTestIdProp) {
-            const inferred = inferCustomComponentIdFromAttributes(node, tagName) || generateTestId(node, tagName, filename, pattern);
+            const inferred =  generateTestId(node, tagName, filename, pattern, customComponents);
 
             context.report({
               node,
@@ -144,203 +179,3 @@ export default {
   }
 };
 
-/**
- * Generate a test ID based on the element and context
- */
-function generateTestId(node, elementType, filename, pattern) {
-  // Extract page name from filename
-  const pageName = getPageNameFromFile(filename);
-  
-  // Get element purpose from props or content
-  const purpose = getElementPurpose(node, elementType);
-  
-  // For common components, try to get context from parent component
-  const context = getElementContext(node, filename);
-  
-  // Generate test ID based on pattern
-  return pattern
-    .replace('{page}', pageName)
-    .replace('{purpose}', purpose)
-    .replace('{element}', elementType)
-    .replace('{context}', context);
-}
-
-/**
- * Extract page name from file path
- */
-function getPageNameFromFile(filename) {
-  // Extract component/page name from file path
-  const pathParts = filename.split('/');
-  const fileName = pathParts[pathParts.length - 1];
-  const componentName = fileName.replace(/\.(jsx?|tsx?)$/, '');
-  
-  // Convert PascalCase to kebab-case
-  return componentName
-    .replace(/([A-Z])/g, '-$1')
-    .toLowerCase()
-    .replace(/^-/, '');
-}
-
-/**
- * Determine element purpose from props or content
- */
-function getElementPurpose(node, elementType) {
-  const openingElement = node.openingElement;
-  
-  // Check for common attributes that indicate purpose
-  const nameAttr = openingElement.attributes.find(attr => 
-    attr.name && attr.name.name === 'name'
-  );
-  if (nameAttr && nameAttr.value) {
-    return nameAttr.value.value || nameAttr.value.raw?.replace(/['"]/g, '');
-  }
-
-  // Check for type attribute (for inputs and buttons)
-  const typeAttr = openingElement.attributes.find(attr => 
-    attr.name && attr.name.name === 'type'
-  );
-  if (typeAttr && typeAttr.value) {
-    const typeValue = typeAttr.value.value || typeAttr.value.raw?.replace(/['"]/g, '');
-    if (typeValue) {
-      return typeValue;
-    }
-  }
-
-  // Check for href attribute (for links)
-  const hrefAttr = openingElement.attributes.find(attr => 
-    attr.name && attr.name.name === 'href'
-  );
-  if (hrefAttr && hrefAttr.value) {
-    const hrefValue = hrefAttr.value.value || hrefAttr.value.raw?.replace(/['"]/g, '');
-    if (hrefValue) {
-      return hrefValue.replace(/[/#]/g, '-').replace(/^-/, '');
-    }
-  }
-
-  // Check for onClick or other event handlers
-  const eventAttr = openingElement.attributes.find(attr => 
-    attr.name && attr.name.name.startsWith('on')
-  );
-  if (eventAttr) {
-    return eventAttr.name.name.replace('on', '').toLowerCase();
-  }
-
-  // Try to get purpose from button text or children
-  if ((elementType === 'button' || elementType === 'Button') && node.children.length > 0) {
-    const textContent = getTextContent(node);
-    if (textContent) {
-      return textContent
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
-    }
-  }
-
-  // Default purpose based on element type
-  const defaultPurposes = {
-    button: 'button',
-    Button: 'button',
-    input: 'input',
-    select: 'select',
-    textarea: 'textarea',
-    a: 'link',
-    form: 'form',
-    div: 'container',
-    Card: 'card',
-    SearchBar: 'search',
-    Dialog: 'dialog',
-    Snackbar: 'snackbar',
-    Dropdown: 'dropdown',
-    DropDown: 'dropdown',
-    Menu: 'menu'
-  };
-
-  return defaultPurposes[elementType] || 'element';
-}
-
-/**
- * Get element context for better test ID generation
- */
-function getElementContext(node, filename) {
-  // Check if this is a common component usage
-  const isCommonComponent = isCommonComponentUsage(node);
-  
-  if (isCommonComponent) {
-    // For common components, use the parent component context
-    const parentContext = getParentComponentContext(node, filename);
-    return parentContext;
-  }
-  
-  return '';
-}
-
-/**
- * Check if this is a common component usage (Button, Card, etc.)
- */
-function isCommonComponentUsage(node) {
-  const commonComponents = ['Button', 'Card', 'SearchBar', 'Dialog', 'Snackbar', 'Dropdown', 'DropDown', 'Menu'];
-  const tagName = node.openingElement.name.name;
-  return commonComponents.includes(tagName);
-}
-
-/**
- * Get parent component context for common component usage
- */
-function getParentComponentContext(node, filename) {
-  // Try to find the parent component by looking up the AST
-  // For now, we'll use the file context and element purpose
-  const pageName = getPageNameFromFile(filename);
-  const purpose = getElementPurpose(node, node.openingElement.name.name);
-  
-  // Create a more specific context
-  return `${pageName}-${purpose}`;
-}
-
-/**
- * Extract text content from JSX element
- */
-function getTextContent(node) {
-  if (!node.children) return '';
-  
-  return node.children
-    .map(child => {
-      if (child.type === 'JSXText') {
-        return child.value.trim();
-      } else if (child.type === 'JSXElement') {
-        return getTextContent(child);
-      }
-      return '';
-    })
-    .join(' ')
-    .trim();
-}
-
-// Helpers for custom components
-function inferCustomComponentIdFromAttributes(node, componentName) {
-  // Try common attributes that might indicate purpose
-  const label = getJSXAttributeLiteral(node, 'label');
-  const placeholder = getJSXAttributeLiteral(node, 'placeholder');
-  const title = getJSXAttributeLiteral(node, 'title');
-  const name = getJSXAttributeLiteral(node, 'name');
-  
-  const base = label || placeholder || title || name || componentName.toLowerCase();
-  return toSlug(base);
-}
-
-function getJSXAttributeLiteral(node, attrName) {
-  const attr = node.openingElement.attributes.find(a => a.name && a.name.name === attrName);
-  if (!attr || !attr.value) return '';
-  if (attr.value.type === 'Literal') return String(attr.value.value || '');
-  if (attr.value.type === 'JSXExpressionContainer' && attr.value.expression.type === 'Literal') {
-    return String(attr.value.expression.value || '');
-  }
-  return '';
-}
-
-function toSlug(text) {
-  return String(text)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
