@@ -1,54 +1,54 @@
 {
-  "name": "autotestid",
-  "version": "1.0.0",
-  "description": "ESLint plugin to enforce data-testid attributes on interactive elements for better testing",
-  "main": "src/index.js",
-  "type": "module",
-  "keywords": [
-    "eslint",
-    "eslintplugin",
-    "eslint-plugin",
-    "testing",
-    "testid",
-    "data-testid",
-    "react",
-    "jsx"
-  ],
-  "author": "Yash Chavan (Hunt092)",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Hunt092/autoTestID.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Hunt092/autoTestID/issues"
-  },
-  "homepage": "https://github.com/Hunt092/autoTestID#readme",
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "peerDependencies": {
-    "eslint": ">=9.0.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.36.0",
-    "eslint": "^9.22.0",
-    "vitest": "^3.2.4"
-  },
-  "scripts": {
-    "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage",
-    "lint": "eslint src/ tests/",
-    "lint:fix": "eslint src/ tests/ --fix"
-  },
-  "files": [
-    "src/",
-    "README.md",
-    "LICENSE"
-  ],
-  "exports": {
-    ".": "./src/index.js",
-    "./package.json": "./package.json"
-  }
+	"name": "autotestid",
+	"version": "1.0.0",
+	"description": "ESLint plugin to enforce data-testid attributes on interactive elements for better testing",
+	"main": "src/index.js",
+	"type": "module",
+	"keywords": [
+		"eslint",
+		"eslintplugin",
+		"eslint-plugin",
+		"testing",
+		"testid",
+		"data-testid",
+		"react",
+		"jsx"
+	],
+	"author": "Yash Chavan (Hunt092)",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Hunt092/autoTestID.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Hunt092/autoTestID/issues"
+	},
+	"homepage": "https://github.com/Hunt092/autoTestID#readme",
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"peerDependencies": {
+		"eslint": ">=9.0.0"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.36.0",
+		"eslint": "^9.22.0",
+		"vitest": "^3.2.4"
+	},
+	"scripts": {
+		"test": "vitest",
+		"test:watch": "vitest --watch",
+		"test:coverage": "vitest --coverage",
+		"lint": "eslint src/ tests/",
+		"lint:fix": "eslint src/ tests/ --fix"
+	},
+	"files": [
+		"src/",
+		"README.md",
+		"LICENSE"
+	],
+	"exports": {
+		".": "./src/index.js",
+		"./package.json": "./package.json"
+	}
 }

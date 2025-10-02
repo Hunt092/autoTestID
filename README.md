@@ -22,58 +22,96 @@ npm install autotestid --save-dev
 
 ```javascript
 // eslint.config.js
-import testidPlugin from 'autotestid';
+import testidPlugin from "autotestid";
 
-export default [{
-  plugins: {
-    'autotestid': testidPlugin
-  },
-  rules: {
-    'autotestid/require-testid': 'error'
-  }
-}];
+export default [
+	{
+		plugins: {
+			autotestid: testidPlugin,
+		},
+		rules: {
+			"autotestid/require-testid": "error",
+		},
+	},
+];
+```
+
+### Using the Recommended Config
+
+```javascript
+// eslint.config.js (flat config)
+import testidPlugin from "autotestid";
+
+export default [
+	{
+		plugins: { autotestid: testidPlugin },
+		extends: ["plugin:autotestid/recommended"],
+	},
+];
 ```
 
 ### Advanced Configuration
 
 ```javascript
 // eslint.config.js
-import testidPlugin from 'autotestid';
+import testidPlugin from "autotestid";
 
-export default [{
-  plugins: {
-    'autotestid': testidPlugin
-  },
-  rules: {
-    'autotestid/require-testid': ['error', {
-      // Native HTML elements that require data-testid
-      elements: ['button', 'input', 'select', 'textarea', 'a', 'form', 'div'],
-      
-      // Custom React components that require dataTestId prop
-      customComponents: ['Button', 'Card', 'SearchBar', 'Dialog', 'Snackbar', 'Dropdown', 'Menu'],
-      
-      // File patterns to exclude
-      exclude: ['**/*.test.jsx', '**/*.spec.jsx', '**/*.stories.jsx'],
-      
-      // Test ID naming pattern
-      pattern: '{page}-{purpose}-{element}'
-    }]
-  }
-}];
+export default [
+	{
+		plugins: {
+			autotestid: testidPlugin,
+		},
+		rules: {
+			"autotestid/require-testid": [
+				"error",
+				{
+					// Native HTML elements that require data-testid
+					elements: [
+						"button",
+						"input",
+						"select",
+						"textarea",
+						"a",
+						"form",
+						"div",
+					],
+
+					// Custom React components that require dataTestId prop
+					customComponents: [
+						"Button",
+						"Card",
+						"SearchBar",
+						"Dialog",
+						"Snackbar",
+						"Dropdown",
+						"Menu",
+					],
+
+					// File patterns to exclude
+					exclude: ["**/*.test.jsx", "**/*.spec.jsx", "**/*.stories.jsx"],
+
+					// Test ID naming pattern
+					pattern: "{page}-{purpose}-{element}",
+				},
+			],
+		},
+	},
+];
 ```
 
 ## Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `elements` | `string[]` | `['button', 'input', 'select', 'textarea', 'a', 'form', 'div']` | Native HTML elements that require `data-testid` |
-| `customComponents` | `string[]` | `[]` | Custom React components that require `dataTestId` prop |
-| `exclude` | `string[]` | `[]` | File patterns to exclude from the rule |
-| `pattern` | `string` | `'{page}-{purpose}-{element}'` | Test ID naming pattern |
+| Option             | Type       | Default                                                         | Description                                            |
+| ------------------ | ---------- | --------------------------------------------------------------- | ------------------------------------------------------ |
+| `elements`         | `string[]` | `['button', 'input', 'select', 'textarea', 'a', 'form', 'div']` | Native HTML elements that require `data-testid`        |
+| `customComponents` | `string[]` | `[]`                                                            | Custom React components that require `dataTestId` prop |
+| `exclude`          | `string[]` | `[]`                                                            | File patterns to exclude from the rule                 |
+| `pattern`          | `string`   | `'{page}-{purpose}-{element}'`                                  | Test ID naming pattern                                 |
 
 ## Test ID Pattern
 
 The plugin generates test IDs using the following pattern:
+
 - `{page}` - Extracted from filename (e.g., `login-page` from `LoginPage.jsx`)
 - `{purpose}` - Inferred from props or content (e.g., `submit` from button text)
 - `{element}` - Element type (e.g., `button`, `input`)
@@ -102,6 +140,28 @@ The plugin generates test IDs using the following pattern:
 <Button dataTestId="login-submit-button" onClick={handleClick}>Submit</Button>
 ```
 
+### Custom Component Implementation Example
+
+```jsx
+// Design system Button component
+export function Button({ dataTestId, children, ...restProps }) {
+	return (
+		<button data-testid={dataTestId} {...restProps}>
+			{children}
+		</button>
+	);
+}
+
+// Usage in app code
+function LoginForm() {
+	return (
+		<Button dataTestId="login-submit-button" type="submit">
+			Submit
+		</Button>
+	);
+}
+```
+
 ### Auto-fix
 
 The plugin can automatically fix missing test IDs:
@@ -117,6 +177,7 @@ npx eslint . --fix
 Enforces `data-testid` attributes on interactive elements.
 
 **Options:**
+
 - `elements` (string[]): Native HTML elements to check
 - `customComponents` (string[]): Custom React components to check
 - `exclude` (string[]): File patterns to exclude
@@ -137,6 +198,7 @@ MIT © Yash Chavan (Hunt092)
 ## Changelog
 
 ### 1.0.0
+
 - Initial release
 - Configurable elements and custom components
 - Auto-fix support
