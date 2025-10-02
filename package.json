@@ -1,5 +1,5 @@
 {
-	"name": "autotestid",
+	"name": "eslint-plugin-autotestid",
 	"version": "1.0.1",
 	"description": "ESLint plugin to enforce data-testid attributes on interactive elements for better testing",
 	"main": "src/index.js",
