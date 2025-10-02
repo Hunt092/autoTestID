@@ -35,7 +35,7 @@
  * @param {string[]} [customComponents] - List of custom components
  * @returns {string} Generated test ID
  */
-function generateTestId(
+export function generateTestId(
 	node,
 	elementType,
 	filename,
@@ -64,7 +64,7 @@ function generateTestId(
  * @param {string} filename - The file path
  * @returns {string} Kebab-case page name
  */
-function getPageNameFromFile(filename) {
+export function getPageNameFromFile(filename) {
 	// Extract component/page name from file path
 	const pathParts = filename.split("/");
 	const fileName = pathParts[pathParts.length - 1];
@@ -92,7 +92,7 @@ function getPageNameFromFile(filename) {
  * @param {string} elementType - The element type
  * @returns {string} Element purpose (submit, email, etc.)
  */
-function getElementPurpose(node, elementType) {
+export function getElementPurpose(node, elementType) {
 	const openingElement = node.openingElement;
 
 	// Check for common attributes that indicate purpose
@@ -173,7 +173,7 @@ function getElementPurpose(node, elementType) {
  * @param {string[]} [customComponents] - List of custom components
  * @returns {string} Element context string
  */
-function getElementContext(node, filename, customComponents) {
+export function getElementContext(node, filename, customComponents) {
 	// Check if this is a common component usage
 	const isCommonComponent = isCommonComponentUsage(
 		node,
@@ -195,7 +195,7 @@ function getElementContext(node, filename, customComponents) {
  * @param {string[]} customComponents - List of custom components
  * @returns {boolean} True if it's a common component
  */
-function isCommonComponentUsage(node, customComponents) {
+export function isCommonComponentUsage(node, customComponents) {
 	const tagName = node.openingElement.name.name;
 	return customComponents.includes(tagName);
 }
@@ -206,7 +206,7 @@ function isCommonComponentUsage(node, customComponents) {
  * @param {string} filename - The source file name
  * @returns {string} Parent component context
  */
-function getParentComponentContext(node, filename) {
+export function getParentComponentContext(node, filename) {
 	// Try to find the parent component by looking up the AST
 	// For now, we'll use the file context and element purpose
 	const pageName = getPageNameFromFile(filename);
@@ -221,7 +221,7 @@ function getParentComponentContext(node, filename) {
  * @param {JSXElement} node - The JSX element node
  * @returns {string} Extracted text content
  */
-function getTextContent(node) {
+export function getTextContent(node) {
 	if (!node.children) return "";
 
 	return node.children
@@ -243,7 +243,7 @@ function getTextContent(node) {
  * @param {string} componentName - The component name
  * @returns {string} Inferred component ID
  */
-function inferCustomComponentIdFromAttributes(node, componentName) {
+export function inferCustomComponentIdFromAttributes(node, componentName) {
 	// Try common attributes that might indicate purpose
 	const label = getJSXAttributeLiteral(node, "label");
 	const placeholder = getJSXAttributeLiteral(node, "placeholder");
@@ -261,7 +261,7 @@ function inferCustomComponentIdFromAttributes(node, componentName) {
  * @param {string} attrName - The attribute name
  * @returns {string} Attribute literal value
  */
-function getJSXAttributeLiteral(node, attrName) {
+export function getJSXAttributeLiteral(node, attrName) {
 	const attr = node.openingElement.attributes.find(
 		(a) => a.name && a.name.name === attrName
 	);
@@ -281,23 +281,9 @@ function getJSXAttributeLiteral(node, attrName) {
  * @param {string} text - The text to convert
  * @returns {string} Slug-formatted text
  */
-function toSlug(text) {
+export function toSlug(text) {
 	return String(text)
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/(^-|-$)/g, "");
 }
-
-/**
- * Module exports for test ID utilities
- * @type {Object}
- */
-module.exports = {
-	generateTestId,
-	getPageNameFromFile,
-	getElementPurpose,
-	getElementContext,
-	getTextContent,
-	inferCustomComponentIdFromAttributes,
-	toSlug,
-};
