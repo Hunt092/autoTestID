@@ -1,16 +1,13 @@
 /**
  * ESLint rule to require data-testid on interactive elements
  * This rule helps ensure all interactive elements have test IDs for testing
- * 
+ *
  * @fileoverview ESLint plugin for enforcing data-testid attributes
  * @author Yash Chavan (Hunt092)
  * @version 1.0.0
  */
 
-import { 
-  generateTestId, 
-  inferCustomComponentIdFromAttributes,
-} from '../utils/testIdUtils.js';
+import { generateTestId } from "../utils/testIdUtils.js";
 
 /**
  * @typedef {Object} TestIdRuleOptions
@@ -31,151 +28,171 @@ import {
  * @type {import('eslint').Rule.RuleModule}
  */
 export default {
-  meta: {
-    type: 'suggestion',
-    docs: {
-      description: 'Require data-testid on interactive elements',
-      category: 'Best Practices',
-      recommended: true,
-    },
-    fixable: 'code',
-    schema: [
-      {
-        type: 'object',
-        properties: {
-          elements: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'List of native HTML elements that require data-testid'
-          },
-          customComponents: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'List of custom components that require dataTestId prop'
-          },
-          exclude: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'List of file patterns to exclude'
-          },
-          pattern: {
-            type: 'string',
-            description: 'Test ID naming pattern'
-          }
-        },
-        additionalProperties: false
-      }
-    ],
-    messages: {
-      missingTestId: 'Interactive element "{{element}}" should have data-testid attribute',
-      suggestTestId: 'Suggested test ID: "{{suggestedId}}"'
-    }
-  },
+	meta: {
+		type: "suggestion",
+		docs: {
+			description: "Require data-testid on interactive elements",
+			category: "Best Practices",
+			recommended: true,
+		},
+		fixable: "code",
+		schema: [
+			{
+				type: "object",
+				properties: {
+					elements: {
+						type: "array",
+						items: { type: "string" },
+						description:
+							"List of native HTML elements that require data-testid",
+					},
+					customComponents: {
+						type: "array",
+						items: { type: "string" },
+						description:
+							"List of custom components that require dataTestId prop",
+					},
+					exclude: {
+						type: "array",
+						items: { type: "string" },
+						description: "List of file patterns to exclude",
+					},
+					pattern: {
+						type: "string",
+						description: "Test ID naming pattern",
+					},
+				},
+				additionalProperties: false,
+			},
+		],
+		messages: {
+			missingTestId:
+				'Interactive element "{{element}}" should have data-testid attribute',
+			suggestTestId: 'Suggested test ID: "{{suggestedId}}"',
+		},
+	},
 
-  /**
-   * Creates the rule implementation
-   * @param {import('eslint').Rule.RuleContext} context - ESLint rule context
-   * @returns {import('eslint').Rule.RuleListener} Rule listener object
-   */
-  create(context) {
-    /** @type {TestIdRuleOptions} */
-    const options = context.options[0] || {};
-    /** @type {string[]} */
-    const elements = options.elements || [
-      'button', 'input', 'select', 'textarea', 'a', 'form', 'div'
-    ];
-    /** @type {string[]} */
-    const customComponents = options.customComponents || [];
-    /** @type {string[]} */
-    const exclude = options.exclude || [];
-    /** @type {string} */
-    const pattern = options.pattern || '{page}-{purpose}-{element}';
+	/**
+	 * Creates the rule implementation
+	 * @param {import('eslint').Rule.RuleContext} context - ESLint rule context
+	 * @returns {import('eslint').Rule.RuleListener} Rule listener object
+	 */
+	create(context) {
+		/** @type {TestIdRuleOptions} */
+		const options = context.options[0] || {};
+		/** @type {string[]} */
+		const elements = options.elements || [
+			"button",
+			"input",
+			"select",
+			"textarea",
+			"a",
+			"form",
+			"div",
+		];
+		/** @type {string[]} */
+		const customComponents = options.customComponents || [];
+		/** @type {string[]} */
+		const exclude = options.exclude || [];
+		/** @type {string} */
+		const pattern = options.pattern || "{page}-{purpose}-{element}";
 
-    // Check if current file should be excluded
-    const filename = context.getFilename();
-    const shouldExclude = exclude.some(pattern => {
-      const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-      return regex.test(filename);
-    });
+		// Check if current file should be excluded
+		const filename = context.getFilename();
+		const shouldExclude = exclude.some((pattern) => {
+			const regex = new RegExp(pattern.replace(/\*/g, ".*"));
+			return regex.test(filename);
+		});
 
-    if (shouldExclude) {
-      return {};
-    }
+		if (shouldExclude) {
+			return {};
+		}
 
-    return {
-      JSXElement(node) {
-        const tagName = node.openingElement.name.name;
+		return {
+			JSXElement(node) {
+				const tagName = node.openingElement.name.name;
 
-        // Special handling for custom components: enforce dataTestId prop
-        if (customComponents.includes(tagName)) {
-          const hasDataTestIdProp = node.openingElement.attributes.some(
-            attr => attr.name && attr.name.name === 'dataTestId'
-          );
+				// Special handling for custom components: enforce dataTestId prop
+				if (customComponents.includes(tagName)) {
+					const hasDataTestIdProp = node.openingElement.attributes.some(
+						(attr) => attr.name && attr.name.name === "dataTestId"
+					);
 
-          if (!hasDataTestIdProp) {
-            const inferred =  generateTestId(node, tagName, filename, pattern, customComponents);
+					if (!hasDataTestIdProp) {
+						const inferred = generateTestId(
+							node,
+							tagName,
+							filename,
+							pattern,
+							customComponents
+						);
 
-            context.report({
-              node,
-              messageId: 'missingTestId',
-              data: {
-                element: tagName,
-                suggestedId: inferred
-              },
-              fix(fixer) {
-                return fixer.insertTextAfter(
-                  node.openingElement.name,
-                  ` dataTestId="${inferred}"`
-                );
-              }
-            });
-          }
-          return; // do not fall through to native handling
-        }
+						context.report({
+							node,
+							messageId: "missingTestId",
+							data: {
+								element: tagName,
+								suggestedId: inferred,
+							},
+							fix(fixer) {
+								return fixer.insertTextAfter(
+									node.openingElement.name,
+									` dataTestId="${inferred}"`
+								);
+							},
+						});
+					}
+					return; // do not fall through to native handling
+				}
 
-        // Check if this element needs a test ID (native or other listed components)
-        if (elements.includes(tagName)) {
-          // Check if it already has data-testid
-          const hasTestId = node.openingElement.attributes.some(
-            attr => attr.name && attr.name.name === 'data-testid'
-          );
+				// Check if this element needs a test ID (native or other listed components)
+				if (elements.includes(tagName)) {
+					// Check if it already has data-testid
+					const hasTestId = node.openingElement.attributes.some(
+						(attr) => attr.name && attr.name.name === "data-testid"
+					);
 
-          // Check if element has interactive attributes (onClick, onSubmit, etc.)
-          const hasInteractiveProps = node.openingElement.attributes.some(
-            attr => attr.name && (
-              attr.name.name.startsWith('on') || // onClick, onSubmit, etc.
-              attr.name.name === 'href' || // Links
-              attr.name.name === 'type' && ['button', 'submit', 'reset'].includes(attr.value?.value) // Button types
-            )
-          );
+					// Check if element has interactive attributes (onClick, onSubmit, etc.)
+					const hasInteractiveProps = node.openingElement.attributes.some(
+						(attr) =>
+							attr.name &&
+							(attr.name.name.startsWith("on") || // onClick, onSubmit, etc.
+								attr.name.name === "href" || // Links
+								(attr.name.name === "type" &&
+									["button", "submit", "reset"].includes(attr.value?.value))) // Button types
+					);
 
-          // Skip if it's a div without interactive props
-          if (tagName === 'div' && !hasInteractiveProps) {
-            return;
-          }
+					// Skip if it's a div without interactive props
+					if (tagName === "div" && !hasInteractiveProps) {
+						return;
+					}
 
-          // If no test ID and element is interactive, report error
-          if (!hasTestId && (hasInteractiveProps || tagName !== 'div')) {
-            const suggestedTestId = generateTestId(node, tagName, filename, pattern);
+					// If no test ID and element is interactive, report error
+					if (!hasTestId && (hasInteractiveProps || tagName !== "div")) {
+						const suggestedTestId = generateTestId(
+							node,
+							tagName,
+							filename,
+							pattern
+						);
 
-            context.report({
-              node,
-              messageId: 'missingTestId',
-              data: {
-                element: tagName,
-                suggestedId: suggestedTestId
-              },
-              fix(fixer) {
-                return fixer.insertTextAfter(
-                  node.openingElement.name,
-                  ` data-testid="${suggestedTestId}"`
-                );
-              }
-            });
-          }
-        }
-      }
-    };
-  }
+						context.report({
+							node,
+							messageId: "missingTestId",
+							data: {
+								element: tagName,
+								suggestedId: suggestedTestId,
+							},
+							fix(fixer) {
+								return fixer.insertTextAfter(
+									node.openingElement.name,
+									` data-testid="${suggestedTestId}"`
+								);
+							},
+						});
+					}
+				}
+			},
+		};
+	},
 };
-

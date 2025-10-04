@@ -1,5 +1,5 @@
 // Integration tests for basic rule behavior
-import { describe, it, expect } from "vitest";
+import { describe } from "vitest";
 import { RuleTester } from "eslint";
 import rule from "../../src/rules/require-testid.js";
 
