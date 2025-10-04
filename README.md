@@ -13,7 +13,7 @@ ESLint plugin to enforce `data-testid` attributes on interactive elements for be
 ## Installation
 
 ```bash
-npm install autotestid --save-dev
+npm install eslint-plugin-autotestid --save-dev
 ```
 
 ## Usage
@@ -22,7 +22,7 @@ npm install autotestid --save-dev
 
 ```javascript
 // eslint.config.js
-import testidPlugin from "autotestid";
+import testidPlugin from "eslint-plugin-autotestid";
 
 export default [
 	{
@@ -40,7 +40,7 @@ export default [
 
 ```javascript
 // eslint.config.js (flat config)
-import testidPlugin from "autotestid";
+import testidPlugin from "eslint-plugin-autotestid";
 
 export default [
 	{
@@ -54,7 +54,7 @@ export default [
 
 ```javascript
 // eslint.config.js
-import testidPlugin from "autotestid";
+import testidPlugin from "eslint-plugin-autotestid";
 
 export default [
 	{
